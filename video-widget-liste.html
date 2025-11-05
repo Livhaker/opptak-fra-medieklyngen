@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opptak fra Medieklyngen-events</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .video-list {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .video-item {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .video-item:last-child {
+            border-bottom: none;
+        }
+
+        .video-item:hover {
+            background: #f7fafc;
+            transform: translateX(8px);
+        }
+
+        .video-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .video-item:hover .video-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .video-info {
+            flex: 1;
+        }
+
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .video-date {
+            font-size: 0.9rem;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .video-date::before {
+            content: '📅';
+        }
+
+        .video-arrow {
+            color: #667eea;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-item:hover .video-arrow {
+            opacity: 1;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .modal-date {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        .close-btn {
+            background: #f7fafc;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #718096;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+            transform: rotate(90deg);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .vimeo-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .vimeo-link:hover {
+            color: #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .video-item {
+                padding: 16px;
+            }
+
+            .video-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .video-title {
+                font-size: 1rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .modal-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .video-count {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Opptak fra Medieklyngen-events</h1>
+        <div class="video-count"></div>
+        
+        <div class="video-list" id="videoList"></div>
+
+        <div class="footer">
+            <p>Klikk på en video for å se den</p>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modalTitle"></div>
+                    <div class="modal-date" id="modalDate"></div>
+                </div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="video-container" id="videoContainer"></div>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="vimeo-link" id="vimeoLink">Se på Vimeo →</a>
+        </div>
+    </div>
+
+    <script>
+        const videos = [
+            {
+                title: "Britney‑satsingen: Slik når vi folk mellom 30 og 49 år",
+                date: "29. august 2025",
+                videoId: "1114164461",
+                hash: "f6c989418b",
+                url: "https://vimeo.com/1114164461/f6c989418b"
+            },
+            {
+                title: "«Stem Frp» – Slik dokumenterte vi en kontroversiell TikTok‑trend",
+                date: "27. mai 2025",
+                videoId: "1087998727",
+                hash: null,
+                url: "https://vimeo.com/1087998727"
+            },
+            {
+                title: "Equinors flammer",
+                date: "15. mai 2025",
+                videoId: "1084717839",
+                hash: "3c0bd6ab91",
+                url: "https://vimeo.com/1084717839/3c0bd6ab91"
+            },
+            {
+                title: "Bak kamera: Direkte fra baketeltet",
+                date: "3. mai 2025",
+                videoId: "1081159634",
+                hash: "450c82d6cc",
+                url: "https://vimeo.com/1081159634/450c82d6cc"
+            },
+            {
+                title: "Slik fant vi hundrevis av instukids på TikTok",
+                date: "19. februar 2025",
+                videoId: "1058326500",
+                hash: "8593fbeee5",
+                url: "https://vimeo.com/1058326500/8593fbeee5"
+            },
+            {
+                title: "Hvordan skal Stavanger Aftenblad nå ut til fremtidens mediebruker?",
+                date: "14. februar 2025",
+                videoId: "1056694004",
+                hash: "5cf47d5853",
+                url: "https://vimeo.com/1056694004/5cf47d5853"
+            },
+            {
+                title: "Zooville‑avsløringen: Barnepsykologens hemmeligheter",
+                date: "7. februar 2025",
+                videoId: "1054578797",
+                hash: "111f069d42",
+                url: "https://vimeo.com/1054578797/111f069d42"
+            },
+            {
+                title: "Derfor satser vi på høydevideo",
+                date: "4. februar 2025",
+                videoId: "1053357545",
+                hash: "8fea1f126c",
+                url: "https://vimeo.com/1053357545/8fea1f126c"
+            },
+            {
+                title: "KI‑Kjetil var først. Når vil vi se flere digitale avatarer i journalistikken?",
+                date: "30. januar 2025",
+                videoId: "1052056794",
+                hash: "c766375c7e",
+                url: "https://vimeo.com/1052056794/c766375c7e"
+            },
+            {
+                title: "Hva vi lærte av å analysere radiodata i Skyggekrigen",
+                date: "28. januar 2025",
+                videoId: "1051283422",
+                hash: "ff8944ab40",
+                url: "https://vimeo.com/1051283422/ff8944ab40"
+            },
+            {
+                title: "Slik bruker iTromsø AI til å utvikle prisvinnende journalistikk",
+                date: "27. januar 2025",
+                videoId: "1050792622",
+                hash: "a92e5761e6",
+                url: "https://vimeo.com/1050792622/a92e5761e6"
+            },
+            {
+                title: "Slik skaper NRK Tromsø store TV‑øyeblikk under ekstreme forhold",
+                date: "23. januar 2025",
+                videoId: "1049657294",
+                hash: "bc10b05761",
+                url: "https://vimeo.com/1049657294/bc10b05761"
+            },
+            {
+                title: "Asylbarna som forsvant",
+                date: "8. mars 2024",
+                videoId: "920957928",
+                hash: "e0458e1c3b",
+                url: "https://vimeo.com/920957928/e0458e1c3b"
+            }
+        ];
+
+        const videoList = document.getElementById('videoList');
+        
+        // Generate video list items
+        videos.forEach((video, index) => {
+            const item = document.createElement('div');
+            item.className = 'video-item';
+            item.onclick = () => openModal(index);
+            
+            item.innerHTML = `
+                <div class="video-icon">🎬</div>
+                <div class="video-info">
+                    <div class="video-title">${video.title}</div>
+                    <div class="video-date">${video.date}</div>
+                </div>
+                <div class="video-arrow">→</div>
+            `;
+            
+            videoList.appendChild(item);
+        });
+
+        function openModal(index) {
+            const video = videos[index];
+            const modal = document.getElementById('videoModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDate = document.getElementById('modalDate');
+            const videoContainer = document.getElementById('videoContainer');
+            const vimeoLink = document.getElementById('vimeoLink');
+
+            modalTitle.textContent = video.title;
+            modalDate.textContent = video.date;
+
+            let embedUrl = `https://player.vimeo.com/video/${video.videoId}?autoplay=1`;
+            if (video.hash) {
+                embedUrl += `&h=${video.hash}`;
+            }
+
+            videoContainer.innerHTML = `
+                <iframe 
+                    src="${embedUrl}" 
+                    frameborder="0" 
+                    allow="autoplay; fullscreen; picture-in-picture" 
+                    allowfullscreen
+                    title="${video.title}">
+                </iframe>
+            `;
+
+            vimeoLink.href = video.url;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('videoModal');
+            const videoContainer = document.getElementById('videoContainer');
+            
+            videoContainer.innerHTML = '';
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('videoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
